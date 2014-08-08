@@ -1,0 +1,25 @@
+{
+  "name": "rhapsody.js",
+  "version": "1.0.0",
+  "main": "rhapsody.js",
+  "homepage": "https://developer.rhapsody.com",
+  "authors": [
+    "Daniel Duda <dudaski@gmail.com>"
+  ],
+  "description": "A client side JavaScript library for managing playback of licensed Rhapsody/Napster audio content.",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "rhapsody",
+    "napster",
+    "rhapsody.js"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "src"
+  ]
+}
