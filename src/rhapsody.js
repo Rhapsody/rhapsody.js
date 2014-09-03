@@ -181,7 +181,8 @@
     player: {
       frameReady: false,
       ready: false,
-
+      eventListeners: {},
+      
       auth: function() {
         if (Rhapsody.api.consumerKey && Rhapsody.member.username && Rhapsody.member.accessToken) {
           Rhapsody.windows(this.win).post('auth', { consumerKey: Rhapsody.api.consumerKey, username: Rhapsody.member.username, accessToken: Rhapsody.member.accessToken  });
@@ -296,43 +297,63 @@
 
       on: function(eventName, callback) {
         var p = this;
+        this.off(eventName);
+        this.eventListeners[eventName] = function(m) {
 
-        window.addEventListener('message', function(m) {
-
-          if (m.data.type === 'playerframeready') {
-            p.frameReady = true;
-          }
-          else if (m.data.type === 'ready') {
-            p.ready = true;
-          }
-          else if (m.data.type === 'playsessionexpired') {
-            p.paused = false;
-            p.playing = false;
-          }
-
-          if (p.frameReady && p.ready && !p.authed) {
-            p.authed = true;
-            p.auth();
-          }
-
-          if (m.data.type === eventName) {
-            if (m.data.data && m.data.data.id) {
-              m.data.data.id = m.data.data.id.replace('tra', 'Tra');
-
-              var c = m.data.data.code,
-                  playing = (c === 'PlayStarted' || (c !== 'PlayComplete' && c !== 'Paused' && c !== 'BufferEmpty' && c !== 'NetworkDropped' && c !== 'PlayInterrupted' && c !== 'IdleTimeout')),
-                  paused = (c === 'Paused' || c === 'NetworkDropped' || c === 'PlayInterrupted' || c === 'IdleTimeout');
-
-              p.playing = m.data.data.playing = playing;
-              p.paused = m.data.data.paused = paused;
-              p.currentTrack = (p.playing || p.paused) ? m.data.data.id : null;
+            if (m.data.type === 'playerframeready') {
+                p.frameReady = true;
+            }
+            else if (m.data.type === 'ready') {
+                p.ready = true;
+            }
+            else if (m.data.type === 'playsessionexpired') {
+                p.paused = false;
+                p.playing = false;
             }
 
-            callback.call(this, m.data);
-          }
-        });
+            if (p.frameReady && p.ready && !p.authed) {
+                p.authed = true;
+                p.auth();
+            }
 
+            if (m.data.type === eventName) {
+                if (m.data.data && m.data.data.id) {
+                    m.data.data.id = m.data.data.id.replace('tra', 'Tra');
+
+                    var c = m.data.data.code,
+                        playing = (c === 'PlayStarted' || (c !== 'PlayComplete' && c !== 'Paused' && c !== 'BufferEmpty' && c !== 'NetworkDropped' && c !== 'PlayInterrupted' && c !== 'IdleTimeout')),
+                        paused = (c === 'Paused' || c === 'NetworkDropped' || c === 'PlayInterrupted' || c === 'IdleTimeout');
+
+                    p.playing = m.data.data.playing = playing;
+                    p.paused = m.data.data.paused = paused;
+                    p.currentTrack = (p.playing || p.paused) ? m.data.data.id : null;
+                }
+
+                callback.call(this, m.data);
+            }
+        };
+
+        window.addEventListener('message',this.eventListeners[eventName]);
         return this;
+      },
+      // ### Unsubscribe or unbind from events:
+      //
+      //     To unbind from a single event
+      //      Rhapsody.player.off('playevent');
+      //
+      //     To unbind from all events
+      //      Rhapsody.player.off();
+      //
+      off: function(eventName){
+         if(eventName){
+             window.removeEventListener('message', this.eventListeners[eventName]);
+         }else{
+             var p = this;
+             Object.keys(this.eventListeners).forEach(function(key){
+                 window.removeEventListener('message', p.eventListeners[key]);
+             });
+         }
+         return this;
       }
     },
     previewer: {
