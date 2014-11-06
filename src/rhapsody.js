@@ -79,7 +79,7 @@
               .attr('name', id)
               .attr('src', 'https://api.rhapsody.com/v1/player/index.html?apikey=' + options.consumerKey)
               .attr('frameborder', 'no')
-              .attr('style', 'display:none;')
+              .attr('style', "width:1px;height:1px;")
               .appendTo($(document.body))
               .load(function() {
                 that.player.win = f.get(0);
