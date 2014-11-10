@@ -10,8 +10,13 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "clone-stats": "0.0.1",
     "gulp": "^3.8.6",
-    "gulp-uglifyjs": "^0.4.2"
+    "gulp-concat": "^2.4.1",
+    "gulp-plumber": "^0.6.6",
+    "gulp-uglifyjs": "^0.4.2",
+    "gulp-util": "^3.0.1",
+    "lodash": "^2.4.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
