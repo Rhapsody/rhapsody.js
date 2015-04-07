@@ -36,9 +36,7 @@
     };
   };
 
-  var USERNAME_KEY = 'rhapsody.member.username',
-      GUID_KEY = 'rhapsody.member.guid',
-      ACCESS_TOKEN_KEY = 'rhapsody.member.accessToken',
+  var ACCESS_TOKEN_KEY = 'rhapsody.member.accessToken',
       REFRESH_TOKEN_KEY = 'rhapsody.member.refreshToken';
 
   var Member = function(obj) {
@@ -77,7 +75,7 @@
             var f = $('<iframe></iframe>')
               .attr('id', id)
               .attr('name', id)
-              .attr('src', 'https://api.rhapsody.com/v1/player/index.html?apikey=' + options.consumerKey)
+              .attr('src', 'http://api.rhapsody.com/v1/player/index.html?apikey=' + options.consumerKey)
               .attr('frameborder', 'no')
               .attr('style', 'display:none;')
               .appendTo($(document.body))
@@ -166,8 +164,6 @@
 
     member: new function() {
       var m = new Member({
-        username: exports.localStorage[USERNAME_KEY],
-        guid: exports.localStorage[GUID_KEY],
         accessToken: exports.localStorage[ACCESS_TOKEN_KEY],
         refreshToken: exports.localStorage[REFRESH_TOKEN_KEY],
       });
@@ -183,8 +179,8 @@
       ready: false,
 
       auth: function() {
-        if (Rhapsody.api.consumerKey && Rhapsody.member.username && Rhapsody.member.accessToken) {
-          Rhapsody.windows(this.win).post('auth', { consumerKey: Rhapsody.api.consumerKey, username: Rhapsody.member.username, accessToken: Rhapsody.member.accessToken  });
+        if (Rhapsody.api.consumerKey && Rhapsody.member.accessToken) {
+          Rhapsody.windows(this.win).post('auth', { consumerKey: Rhapsody.api.consumerKey, accessToken: Rhapsody.member.accessToken  });
         }
       },
 
@@ -377,8 +373,6 @@
 
   method(Member.prototype, 'set', function(creds) {
     if (creds && creds.accessToken && creds.refreshToken) {
-      this.username = exports.localStorage[USERNAME_KEY] = creds.username;
-      this.guid = exports.localStorage[GUID_KEY] = creds.guid;
       this.accessToken = exports.localStorage[ACCESS_TOKEN_KEY] = creds.accessToken;
       this.refreshToken = exports.localStorage[REFRESH_TOKEN_KEY] = creds.refreshToken;
 
@@ -387,17 +381,13 @@
   });
 
   method(Member.prototype, 'unset', function() {
-    this.username = this.guid = this.accessToken = this.refreshToken = null;
+    this.accessToken = this.refreshToken = null;
 
-    exports.localStorage.removeItem(USERNAME_KEY);
-    exports.localStorage.removeItem(GUID_KEY);
     exports.localStorage.removeItem(ACCESS_TOKEN_KEY);
     exports.localStorage.removeItem(REFRESH_TOKEN_KEY);
   });
 
   method(Member.prototype, 'load', function() {
-    this.username = exports.localStorage[USERNAME_KEY];
-    this.guid = exports.localStorage[GUID_KEY];
     this.accessToken = exports.localStorage[ACCESS_TOKEN_KEY];
     this.refreshToken = exports.localStorage[REFRESH_TOKEN_KEY];
 
@@ -405,7 +395,7 @@
   });
 
   method(Member.prototype, 'signedIn', function() {
-    return (this.username != null && this.accessToken != null && this.refreshToken != null);
+    return (this.accessToken != null && this.refreshToken != null);
   });
 
   // Everyone listens to these events
