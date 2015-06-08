@@ -270,8 +270,9 @@
       },
 
       // #### Set volume
+      // Volume should be in range [0,1]
       //
-      //     Rhapsody.player.setVolume(1);
+      //     Rhapsody.player.setVolume(0.8);
 
       setVolume: function(n) {
         Rhapsody.windows(this.win).post('setVolume', n);
