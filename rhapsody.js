@@ -165,7 +165,7 @@
     member: new function() {
       var m = new Member({
         accessToken: exports.localStorage[ACCESS_TOKEN_KEY],
-        refreshToken: exports.localStorage[REFRESH_TOKEN_KEY],
+        refreshToken: exports.localStorage[REFRESH_TOKEN_KEY]
       });
 
       return m;
@@ -267,6 +267,15 @@
 
       seek: function(t) {
         Rhapsody.windows(this.win).post('seek', t);
+      },
+
+      // #### Set volume
+      // Volume should be in range [0,1]
+      //
+      //     Rhapsody.player.setVolume(0.8);
+
+      setVolume: function(n) {
+        Rhapsody.windows(this.win).post('setVolume', n);
       },
 
       // ### Playback Events
