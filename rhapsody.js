@@ -75,7 +75,7 @@
             var f = $('<iframe></iframe>')
               .attr('id', id)
               .attr('name', id)
-              .attr('src', 'http://api.rhapsody.com/v1/player/index.html?apikey=' + options.consumerKey)
+              .attr('src', 'http://api.rhapsody.com/v1.1/player/index.html?apikey=' + options.consumerKey)
               .attr('frameborder', 'no')
               .attr('style', 'display:none;')
               .appendTo($(document.body))
@@ -268,7 +268,7 @@
       seek: function(t) {
         Rhapsody.windows(this.win).post('seek', t);
       },
-
+      
       // #### Set volume
       // Volume should be in range [0,1]
       //
