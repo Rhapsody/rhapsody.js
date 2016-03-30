@@ -30,6 +30,15 @@ Rhapsody.member.set({
 ### Playback
 The Rhapsody object exposes a top-level `player` object that provides the necessary methods to manage playback.
 
+### Check if player is ready and authorize 
+
+```javascript
+Rhapsody.player.on('ready', function(e) {
+    Rhapsody.member.set({accessToken: 'oauth access token'}); // If not set earlier
+    Rhapsody.player.auth();
+}
+```
+
 #### Playing a track
 ```javascript
 Rhapsody.player.play('Tra.5156528');
@@ -40,41 +49,19 @@ Rhapsody.player.play('Tra.5156528');
 Rhapsody.player.pause();
 ```
 
-#### Skipping to the next track
-```javascript
-Rhapsody.player.next();
-```
-
-#### Skipping to the previous track
-```javascript
-Rhapsody.player.previous();
-```
-
-#### Queueing a Track
-```javascript
-Rhapsody.player.queue('Tra.5156528');
-```
-
-#### Clear the Queue
-```javascript
-Rhapsody.player.clearQueue();
-```
-
-#### Shuffle
-```javascript
-Rhapsody.player.toggleShuffle();
-```
-
-#### Repeat
-```javascript
-Rhapsody.player.toggleRepeat();
-```
-
 #### Seek
 For example, to seek to 0:10 in a given track:
 
 ```javascript
 Rhapsody.player.seek();
+```
+
+#### Volume
+
+Set volume between muted (0) and max (1.0)
+
+```javascript
+Rhapsody.player.setVolume(.5);
 ```
 
 ### Data
@@ -93,9 +80,6 @@ There are a number of interesting playback-related events you can listen for:
 * playtimer: Current time, total time, waveform data
 * error: Bad things
 * metadata
-* queueloaded
-* queuechanged
-* authenticated
 * ready
 * playsessionexpired
 * playstopped
