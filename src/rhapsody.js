@@ -1,4 +1,7 @@
-// The first thing you need to do, after including Rhapsody.js in your app (but before using it), is initialize the Rhapsody object with your application key.
+//  Copyright (c) 2016 Rhapsody International
+//  Code released under the MIT license.
+//  See https://github.com/Rhapsody/rhapsody.js#the-mit-license-mit for more detail.
+//  The first thing you need to do, after including Rhapsody.js in your app (but before using it), is initialize the Rhapsody object with your application key.
 //
 //     Rhapsody.init({
 //       consumerKey: 'foo'
@@ -268,7 +271,7 @@
       seek: function(t) {
         Rhapsody.windows(this.win).post('seek', t);
       },
-      
+
       // #### Set volume
       // Volume should be in range [0,1]
       //
