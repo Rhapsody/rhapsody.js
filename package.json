@@ -11,6 +11,8 @@
   "dependencies": {},
   "devDependencies": {
     "gulp": "^3.8.6",
+    "gulp-concat": "^2.6.0",
+    "gulp-plumber": "^1.1.0",
     "gulp-uglifyjs": "^0.4.2"
   },
   "scripts": {
