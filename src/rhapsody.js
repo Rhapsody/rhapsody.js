@@ -99,7 +99,7 @@
     api: {
       host: 'api.rhapsody.com',
       catalog: 'US',
-      version: 'v1',
+      version: 'v2.1',
       endpoint: function(secure) {
         return (secure ? 'https://' : 'http://') + [this.host, this.version].join('/');
       },

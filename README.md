@@ -13,7 +13,7 @@ Rhapsody.init({
 | Attribute      | Default        | Description   |
 | -------------- | -------------- | ------------- |
 | consumerKey    | undefined      | The application key |
-| version        | 'v1'           | API endpoint version |
+| version        | 'v2.1'           | API endpoint version. Please refer to [developer.napster.com](developer.napster.com) for available versions. |
 | catalog        | 'EN'           | The desired catalog locale |
 | player         | 'player-frame' | The html element id where the player iframe will be embedded |
 
@@ -68,8 +68,8 @@ Rhapsody.player.setVolume(.5);
 The Rhapsody object exposes some API convenience methods. There are methods for HTTP GET, POST, PUT, and DELETE. The first parameter determines if a secure request is made.
 
 ```javascript
-Rhapsody.api.get(false, '/tracks/top', function(tracks) {
-  Rhapsody.player.play(tracks[0].id);
+Rhapsody.api.get(false, '/tracks/top', function(data) {
+  Rhapsody.player.play(data.tracks[0].id);
 });
 ```
 

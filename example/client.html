@@ -23,7 +23,7 @@
             }
           }
         });
-      };
+      }
 
       function getParameters() {
         var query = window.location.search.substring(1);
@@ -37,9 +37,10 @@
         }
 
         return parameters;
-      };
+      }
 
       $(document).ready(function() {
+        var currentTrack;
         Rhapsody.init({ consumerKey: API_KEY });
 
         Rhapsody.player.on('ready', function(e) {
@@ -48,16 +49,17 @@
             Rhapsody.member.set(params);
           }
 
-          Rhapsody.api.get(false, '/tracks/top', function(tracks) {
+          Rhapsody.api.get(false, '/tracks/top', function(data) {
+            var tracks = data.tracks;
             tracks.forEach(function(track, i) {
               var $t = $('<div class="track" data-track="' + track.id + '">' +
                            '<div class="album-art"></div>' +
                            '<div class="track-info">' +
                              '<div class="progress-bar"></div>' +
                              '<div class="name">' + track.name + '</div>' +
-                             '<div class="artist">' + track.artist.name + '</div>' +
-                             '<div class="duration">' + Rhapsody.util.secondsToTime(track.duration) + '</div>' +
-                             '<div class="current-time">' + Rhapsody.util.secondsToTime(track.duration) + '</div>' +
+                             '<div class="artist">' + track.artistName + '</div>' +
+                             '<div class="duration">' + Rhapsody.util.secondsToTime(track.playbackSeconds) + '</div>' +
+                             '<div class="current-time">' + Rhapsody.util.secondsToTime(track.playbackSeconds) + '</div>' +
                            '</div>' +
                           '</div>');
 
@@ -77,28 +79,29 @@
 
               $t.appendTo('#tracks');
 
-              Rhapsody.api.get(false, '/albums/' + track.album.id, function(album) {
+              Rhapsody.api.get(false, '/albums/' + track.albumId + '/images', function(data) {
+                var images = data.images;
                 $('[data-track="' + track.id + '"] .album-art')
-                  .append($('<img>', { src: album.images[0].url }));
+                  .append($('<img>', { src: images[0].url }));
               });
             });
           });
         });
 
         Rhapsody.player.on('playevent', function(e) {
-          var id = e.data.id,
-              playing = e.data.playing;
-              paused = e.data.paused;
+          var playing = e.data.playing;
+          var paused = e.data.paused;
+          var currentTrack = e.data.id;
 
           $('[data-track]').removeClass('playing paused');
-          $('[data-track="' + id + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
+          $('[data-track="' + currentTrack + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
         });
 
         Rhapsody.player.on('playtimer', function(e) {
-          var id = e.data.id,
-              current = e.data.currentTime,
-              total = e.data.totalTime,
-              width = $("[data-track='" + id + "'] .track-info").width();
+          var id = currentTrack;
+          var current = e.data.currentTime;
+          var total = e.data.totalTime;
+          var width = $("[data-track='" + id + "'] .track-info").width();
 
           $("[data-track='" + id + "']").addClass("playing");
           $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
