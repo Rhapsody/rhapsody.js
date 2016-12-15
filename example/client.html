@@ -46,14 +46,14 @@
 
         Rhapsody.player.on('ready', function(e) {
           var params = getParameters();
+
           if (params.accessToken) {
             Rhapsody.member.set(params);
           }
 
           Rhapsody.api.get(true, '/me/library/playlists', function(playlistData) {
             playlists = playlistData.playlists;
-            playlists.forEach(function(playlist) {
-              console.log(playlist);
+            var $playlists = playlists.map(function(playlist) {
               var $p = $(`<div class="playlist" data-playlist="${playlist.id}">
               <div class="name"">${playlist.name}</div>
               <div class="playlist-art"></div>
@@ -61,78 +61,96 @@
               </div>`)
               $p.click(function(e) {
                 var selectedPlaylist = $(e.target.parentElement).attr("data-playlist");
+                getPlaylistTracks(selectedPlaylist);
                 $("#playlists").detach();
-                Rhapsody.api.get(true, '/me/library/playlists/' + selectedPlaylist + '/tracks?limit=5', function (trackData) {
-                  trackData.tracks.forEach(function (track, i) {
-                    var $t = $(`<div class="track" data-track="${track.id}">
-                    <div class="album-art"></div>
-                    <div class="track-info">
-                    <div class="progress-bar"></div>
-                    <div class="name">${track.name}</div>
-                    <div class="artist">${track.artistName}</div>
-                    <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
-                    <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
-                    </div>
-                    </div>`);
-                    $t.click(function() {
-                      const id = track.id;
-
-                      if (Rhapsody.player.currentTrack === id) {
-                        Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
-                      } else {
-                        // $('[data-track="' + id + '"] .progress-bar').width(0);
-                        // $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
-
-                        Rhapsody.player.play(id);
-                      }
-                    });
-
-                    $t.appendTo('#tracks');
-
-                    Rhapsody.api.get(false, `/albums/${track.albumId}/images`, function(data) {
-                      const images = data.images;
-                      $(`[data-track="${track.id}"] .album-art`)
-                      .append($('<img>', { src: images[0].url }));
-                    });
-
-
-                  })
-                })
-
-
-              })
-              $p.appendTo('#playlists');
-              playlist.images.forEach(function(image) {
-                console.log('image ', image.url);
-                $(`[data-playlist="${playlist.id}"] .playlist-art`)
-                .append($('<img>', { src: image.url }));
-              })
+              });
+              return $p;
+            });
+            $.each($playlists, function (index, $p) {
+              $('#playlists').append($p);
+            });
+            $.each(playlists, function (index, playlist) {
+              console.log(playlist.images[0].url);
+              const image = playlist.images[0].url;
+              console.log('playlist :' + image);
+              $(`[data-track="${playlist.id}"] .playlist-art`)
+              .append($('<img>', { src: image }));
             })
-          });
-        });
+          })
 
-        Rhapsody.player.on('playevent', function(e) {
-          var playing = e.data.playing;
-          var paused = e.data.paused;
-          var currentTrack = e.data.id;
+            function getPlaylistTracks(pId) {
+              Rhapsody.api.get(true, '/me/library/playlists/' + pId + '/tracks?limit=5', function (trackData) {
+                var $tracks = trackData.tracks.map(function (track, i) {
+                  var $t = $(`<div class="track" data-track="${track.id}">
+                  <div class="album-art"></div>
+                  <div class="track-info">
+                  <div class="progress-bar"></div>
+                  <div class="name">${track.name}</div>
+                  <div class="artist">${track.artistName}</div>
+                  <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                  <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                  </div>
+                  </div>`);
+                  $t.click(function() {
+                    const id = track.id;
+
+                    if (Rhapsody.player.currentTrack === id) {
+                      Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
+                    } else {
+                      $('[data-track="' + id + '"] .progress-bar').width(0);
+                      $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
+
+                      Rhapsody.player.play(id);
+                    }
+                  });
+                  return $t;
+                });
+                $.each($tracks, function (index, $track) {
+                  $('#tracks').append($track);
+                })
+                $.each(trackData.tracks, function(index, track) {
+                  Rhapsody.api.get(true, `/albums/${track.albumId}/images`, function(data) {
+                    const image = data.images[0].url;
+                    console.log('track: ' + image);
+                    $(`[data-track="${track.id}"] .album-art`)
+                    .append($('<img>', { src: image }));
+                  });
+                })
+              })
+            }
+
+
+
+            })
+              // playlist.images.forEach(function(image) {
+              //   console.log('image ', image.url);
+              //   $(`[data-playlist="${playlist.id}"] .playlist-art`)
+              //   .append($('<img>', { src: image.url }));
+              // })
+          })
+
+        // Rhapsody.player.on('playevent', function(e) {
+        //   var playing = e.data.playing;
+        //   var paused = e.data.paused;
+        //   var currentTrack = e.data.id;
 
           // $('[data-track]').removeClass('playing paused');
           // $('[data-track="' + currentTrack + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
-        });
+        // });
 
-        Rhapsody.player.on('playtimer', function(e) {
-          var id = currentTrack;
-          var current = e.data.currentTime;
-          var total = e.data.totalTime;
+        // Rhapsody.player.on('playtimer', function(e) {
+        //   var id = currentTrack;
+        //   var current = e.data.currentTime;
+        //   var total = e.data.totalTime;
           // var width = $("[data-track='" + id + "'] .track-info").width();
           //
           // $("[data-track='" + id + "']").addClass("playing");
           // $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
           // $("[data-track='" + id + "'] .current-time").html(Rhapsody.util.secondsToTime(total - current));
-        });
+        // });
 
-        Rhapsody.player.on('error', console.log);
-      });
+        // Rhapsody.player.on('error', console.log);
+
     </script>
     <style type="text/css">
       /*body {
