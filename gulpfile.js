@@ -1,6 +1,4 @@
 var gulp = require('gulp');
-var concat = require('gulp-concat');
-var plumber = require('gulp-plumber');
 var uglify = require('gulp-uglifyjs');
 
 var source = [ 'src/*.js' ];
