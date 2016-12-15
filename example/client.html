@@ -50,42 +50,64 @@
             Rhapsody.member.set(params);
           }
 
-          Rhapsody.api.get(true, '/me/library/playlists?include=tracks', function(data) {
-            playlists = data.playlists;
-            currentPlaylist = playlists[0];
-            currentPlaylist.linked.tracks.forEach(function(track, i) {
-              var $t = $(`<div class="track" data-track="${track.id}">
-                <div class="album-art"></div>
-                <div class="track-info">
-                <div class="progress-bar"></div>
-                <div class="name">${track.name}</div>
-                <div class="artist">${track.artistName}</div>
-                <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
-                <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
-                </div>
-              </div>`);
+          Rhapsody.api.get(true, '/me/library/playlists', function(playlistData) {
+            playlists = playlistData.playlists;
+            playlists.forEach(function(playlist) {
+              console.log(playlist);
+              var $p = $(`<div class="playlist" data-playlist="${playlist.id}">
+              <div class="name"">${playlist.name}</div>
+              <div class="playlist-art"></div>
+              </div>
+              </div>`)
+              $p.click(function(e) {
+                var selectedPlaylist = $(e.target.parentElement).attr("data-playlist");
+                $("#playlists").detach();
+                Rhapsody.api.get(true, '/me/library/playlists/' + selectedPlaylist + '/tracks?limit=5', function (trackData) {
+                  trackData.tracks.forEach(function (track, i) {
+                    var $t = $(`<div class="track" data-track="${track.id}">
+                    <div class="album-art"></div>
+                    <div class="track-info">
+                    <div class="progress-bar"></div>
+                    <div class="name">${track.name}</div>
+                    <div class="artist">${track.artistName}</div>
+                    <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                    <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                    </div>
+                    </div>`);
+                    $t.click(function() {
+                      const id = track.id;
 
-              $t.click(function() {
-                const id = track.id;
+                      if (Rhapsody.player.currentTrack === id) {
+                        Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
+                      } else {
+                        // $('[data-track="' + id + '"] .progress-bar').width(0);
+                        // $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
 
-                if (Rhapsody.player.currentTrack === id) {
-                  Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
-                } else {
-                  // $('[data-track="' + id + '"] .progress-bar').width(0);
-                  // $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
+                        Rhapsody.player.play(id);
+                      }
+                    });
 
-                  Rhapsody.player.play(id);
-                }
-              });
+                    $t.appendTo('#tracks');
 
-              $t.appendTo('#tracks');
+                    Rhapsody.api.get(false, `/albums/${track.albumId}/images`, function(data) {
+                      const images = data.images;
+                      $(`[data-track="${track.id}"] .album-art`)
+                      .append($('<img>', { src: images[0].url }));
+                    });
 
-              Rhapsody.api.get(false, `/albums/${track.albumId}/images`, function(data) {
-                const images = data.images;
-                $(`[data-track="${track.id}"] .album-art`)
-                  .append($('<img>', { src: images[0].url }));
-              });
-            });
+
+                  })
+                })
+
+
+              })
+              $p.appendTo('#playlists');
+              playlist.images.forEach(function(image) {
+                console.log('image ', image.url);
+                $(`[data-playlist="${playlist.id}"] .playlist-art`)
+                .append($('<img>', { src: image.url }));
+              })
+            })
           });
         });
 
@@ -237,6 +259,7 @@
     <div class="header">
       <div class="header-text">jooke.me<span class="user"></span></div>
     </div>
+    <div id="playlists"></div>
     <div id="tracks"></div>
   </body>
 </html>
