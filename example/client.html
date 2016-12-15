@@ -5,111 +5,155 @@
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
     <script src="rhapsody.js" type="text/javascript"></script>
     <script type="text/javascript">
-      var API_KEY = 'API_KEY';
-
-      function refresh(callback) {
-        $.ajax({
-          url: '/reauthorize',
-          method: 'GET',
-          data: { refreshToken: Rhapsody.member.refreshToken },
-          success: function(data) {
-            Rhapsody.member.set({
-              accessToken: data.access_token,
-              refreshToken: data.refresh_token
-            });
-
-            if (callback) {
-              callback(data);
-            }
-          }
-        });
-      };
+      var API_KEY = 'MjZhZDI3YTAtMWY0Mi00ZTA2LWEzZDEtNWUzNmU4YTc3MjQ4';
+      //
+      // function refresh(callback) {
+      //   $.ajax({
+      //     url: '/reauthorize',
+      //     method: 'GET',
+      //     data: { refreshToken: Rhapsody.member.refreshToken },
+      //     success: function(data) {
+      //       Rhapsody.member.set({
+      //         accessToken: data.access_token,
+      //         refreshToken: data.refresh_token
+      //       });
+      //
+      //       if (callback) {
+      //         callback(data);
+      //       }
+      //     }
+      //   });
+      // }
 
       function getParameters() {
         var query = window.location.search.substring(1);
         var parameters = {};
-
         if (query) {
           query.split('&').forEach(function(item) {
             var param = item.split('=');
             parameters[param[0]] = param[1];
           });
         }
-
         return parameters;
-      };
+      }
 
       $(document).ready(function() {
+        var playlists;
+        var currentPlaylist;
+        var currentPlaylistTracks;
+        var currentTrack;
         Rhapsody.init({ consumerKey: API_KEY });
 
         Rhapsody.player.on('ready', function(e) {
           var params = getParameters();
+
           if (params.accessToken) {
             Rhapsody.member.set(params);
           }
 
-          Rhapsody.api.get(false, '/tracks/top', function(tracks) {
-            tracks.forEach(function(track, i) {
-              var $t = $('<div class="track" data-track="' + track.id + '">' +
-                           '<div class="album-art"></div>' +
-                           '<div class="track-info">' +
-                             '<div class="progress-bar"></div>' +
-                             '<div class="name">' + track.name + '</div>' +
-                             '<div class="artist">' + track.artist.name + '</div>' +
-                             '<div class="duration">' + Rhapsody.util.secondsToTime(track.duration) + '</div>' +
-                             '<div class="current-time">' + Rhapsody.util.secondsToTime(track.duration) + '</div>' +
-                           '</div>' +
-                          '</div>');
-
-              $t.click(function() {
-                var id = track.id;
-
-                if (Rhapsody.player.currentTrack === id) {
-                  Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
-                }
-                else {
-                  $('[data-track="' + id + '"] .progress-bar').width(0);
-                  $('[data-track="' + id + '"] .current-time').html($('[data-track="' + id + '"] .duration').html());
-
-                  Rhapsody.player.play(id);
-                }
+          Rhapsody.api.get(true, '/me/library/playlists', function(playlistData) {
+            playlists = playlistData.playlists;
+            var $playlists = playlists.map(function(playlist) {
+              var $p = $(`<div class="playlist" data-playlist="${playlist.id}">
+              <div class="name"">${playlist.name}</div>
+              <div class="playlist-art"></div>
+              </div>
+              </div>`)
+              $p.click(function(e) {
+                var selectedPlaylist = $(e.target.parentElement).attr("data-playlist");
+                getPlaylistTracks(selectedPlaylist);
+                $("#playlists").detach();
               });
-
-              $t.appendTo('#tracks');
-
-              Rhapsody.api.get(false, '/albums/' + track.album.id, function(album) {
-                $('[data-track="' + track.id + '"] .album-art')
-                  .append($('<img>', { src: album.images[0].url }));
-              });
+              return $p;
             });
-          });
-        });
+            $.each($playlists, function (index, $p) {
+              $('#playlists').append($p);
+            });
+            $.each(playlists, function (index, playlist) {
+              console.log(playlist.images[0].url);
+              const image = playlist.images[0].url;
+              console.log('playlist :' + image);
+              $(`[data-track="${playlist.id}"] .playlist-art`)
+              .append($('<img>', { src: image }));
+            })
+          })
 
-        Rhapsody.player.on('playevent', function(e) {
-          var id = e.data.id,
-              playing = e.data.playing;
-              paused = e.data.paused;
+            function getPlaylistTracks(pId) {
+              Rhapsody.api.get(true, '/me/library/playlists/' + pId + '/tracks?limit=5', function (trackData) {
+                var $tracks = trackData.tracks.map(function (track, i) {
+                  var $t = $(`<div class="track" data-track="${track.id}">
+                  <div class="album-art"></div>
+                  <div class="track-info">
+                  <div class="progress-bar"></div>
+                  <div class="name">${track.name}</div>
+                  <div class="artist">${track.artistName}</div>
+                  <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                  <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                  </div>
+                  </div>`);
+                  $t.click(function() {
+                    const id = track.id;
 
-          $('[data-track]').removeClass('playing paused');
-          $('[data-track="' + id + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
-        });
+                    if (Rhapsody.player.currentTrack === id) {
+                      Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
+                    } else {
+                      $('[data-track="' + id + '"] .progress-bar').width(0);
+                      $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
 
-        Rhapsody.player.on('playtimer', function(e) {
-          var id = e.data.id,
-              current = e.data.currentTime,
-              total = e.data.totalTime,
-              width = $("[data-track='" + id + "'] .track-info").width();
+                      Rhapsody.player.play(id);
+                    }
+                  });
+                  return $t;
+                });
+                $.each($tracks, function (index, $track) {
+                  $('#tracks').append($track);
+                })
+                $.each(trackData.tracks, function(index, track) {
+                  Rhapsody.api.get(true, `/albums/${track.albumId}/images`, function(data) {
+                    const image = data.images[0].url;
+                    console.log('track: ' + image);
+                    $(`[data-track="${track.id}"] .album-art`)
+                    .append($('<img>', { src: image }));
+                  });
+                })
+              })
+            }
 
-          $("[data-track='" + id + "']").addClass("playing");
-          $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
-          $("[data-track='" + id + "'] .current-time").html(Rhapsody.util.secondsToTime(total - current));
-        });
 
-        Rhapsody.player.on('error', console.log);
-      });
+
+            })
+              // playlist.images.forEach(function(image) {
+              //   console.log('image ', image.url);
+              //   $(`[data-playlist="${playlist.id}"] .playlist-art`)
+              //   .append($('<img>', { src: image.url }));
+              // })
+          })
+
+        // Rhapsody.player.on('playevent', function(e) {
+        //   var playing = e.data.playing;
+        //   var paused = e.data.paused;
+        //   var currentTrack = e.data.id;
+
+          // $('[data-track]').removeClass('playing paused');
+          // $('[data-track="' + currentTrack + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
+        // });
+
+        // Rhapsody.player.on('playtimer', function(e) {
+        //   var id = currentTrack;
+        //   var current = e.data.currentTime;
+        //   var total = e.data.totalTime;
+          // var width = $("[data-track='" + id + "'] .track-info").width();
+          //
+          // $("[data-track='" + id + "']").addClass("playing");
+          // $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
+          // $("[data-track='" + id + "'] .current-time").html(Rhapsody.util.secondsToTime(total - current));
+        // });
+
+        // Rhapsody.player.on('error', console.log);
+
     </script>
     <style type="text/css">
-      body {
+      /*body {
         font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
       }
 
@@ -226,13 +270,14 @@
       .playing .current-time,
       .paused .current-time {
         display: block;
-      }
+      }*/
     </style>
   </head>
   <body>
     <div class="header">
       <div class="header-text">jooke.me<span class="user"></span></div>
     </div>
+    <div id="playlists"></div>
     <div id="tracks"></div>
   </body>
 </html>
