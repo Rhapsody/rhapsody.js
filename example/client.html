@@ -6,74 +6,73 @@
     <script src="rhapsody.js" type="text/javascript"></script>
     <script type="text/javascript">
       var API_KEY = 'MjZhZDI3YTAtMWY0Mi00ZTA2LWEzZDEtNWUzNmU4YTc3MjQ4';
-
-      function refresh(callback) {
-        $.ajax({
-          url: '/reauthorize',
-          method: 'GET',
-          data: { refreshToken: Rhapsody.member.refreshToken },
-          success: function(data) {
-            Rhapsody.member.set({
-              accessToken: data.access_token,
-              refreshToken: data.refresh_token
-            });
-
-            if (callback) {
-              callback(data);
-            }
-          }
-        });
-      }
+      //
+      // function refresh(callback) {
+      //   $.ajax({
+      //     url: '/reauthorize',
+      //     method: 'GET',
+      //     data: { refreshToken: Rhapsody.member.refreshToken },
+      //     success: function(data) {
+      //       Rhapsody.member.set({
+      //         accessToken: data.access_token,
+      //         refreshToken: data.refresh_token
+      //       });
+      //
+      //       if (callback) {
+      //         callback(data);
+      //       }
+      //     }
+      //   });
+      // }
 
       function getParameters() {
         var query = window.location.search.substring(1);
         var parameters = {};
-
         if (query) {
           query.split('&').forEach(function(item) {
             var param = item.split('=');
             parameters[param[0]] = param[1];
           });
         }
-
         return parameters;
       }
 
       $(document).ready(function() {
-        console.log('here')
+        var playlists;
+        var currentPlaylist;
+        var currentPlaylistTracks;
         var currentTrack;
         Rhapsody.init({ consumerKey: API_KEY });
 
         Rhapsody.player.on('ready', function(e) {
-          console.log('edfsdfsd')
           var params = getParameters();
           if (params.accessToken) {
             Rhapsody.member.set(params);
           }
 
-          Rhapsody.api.get(false, '/tracks/top', function(data) {
-            var tracks = data.tracks;
-            tracks.forEach(function(track, i) {
-              var $t = $('<div class="track" data-track="' + track.id + '">' +
-                           '<div class="album-art"></div>' +
-                           '<div class="track-info">' +
-                             '<div class="progress-bar"></div>' +
-                             '<div class="name">' + track.name + '</div>' +
-                             '<div class="artist">' + track.artistName + '</div>' +
-                             '<div class="duration">' + Rhapsody.util.secondsToTime(track.playbackSeconds) + '</div>' +
-                             '<div class="current-time">' + Rhapsody.util.secondsToTime(track.playbackSeconds) + '</div>' +
-                           '</div>' +
-                          '</div>');
+          Rhapsody.api.get(true, '/me/library/playlists?include=tracks', function(data) {
+            playlists = data.playlists;
+            currentPlaylist = playlists[0];
+            currentPlaylist.linked.tracks.forEach(function(track, i) {
+              var $t = $(`<div class="track" data-track="${track.id}">
+                <div class="album-art"></div>
+                <div class="track-info">
+                <div class="progress-bar"></div>
+                <div class="name">${track.name}</div>
+                <div class="artist">${track.artistName}</div>
+                <div class="duration">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                <div class="current-time">${Rhapsody.util.secondsToTime(track.playbackSeconds)}</div>
+                </div>
+              </div>`);
 
               $t.click(function() {
-                var id = track.id;
+                const id = track.id;
 
                 if (Rhapsody.player.currentTrack === id) {
                   Rhapsody.player.playing ? Rhapsody.player.pause() : Rhapsody.player.play(id);
-                }
-                else {
-                  $('[data-track="' + id + '"] .progress-bar').width(0);
-                  $('[data-track="' + id + '"] .current-time').html($('[data-track="' + id + '"] .duration').html());
+                } else {
+                  // $('[data-track="' + id + '"] .progress-bar').width(0);
+                  // $(`[data-track="${id}"] .current-time`).html($(`[data-track="${id}"] .duration`).html());
 
                   Rhapsody.player.play(id);
                 }
@@ -81,9 +80,9 @@
 
               $t.appendTo('#tracks');
 
-              Rhapsody.api.get(false, '/albums/' + track.albumId + '/images', function(data) {
-                var images = data.images;
-                $('[data-track="' + track.id + '"] .album-art')
+              Rhapsody.api.get(false, `/albums/${track.albumId}/images`, function(data) {
+                const images = data.images;
+                $(`[data-track="${track.id}"] .album-art`)
                   .append($('<img>', { src: images[0].url }));
               });
             });
@@ -95,26 +94,26 @@
           var paused = e.data.paused;
           var currentTrack = e.data.id;
 
-          $('[data-track]').removeClass('playing paused');
-          $('[data-track="' + currentTrack + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
+          // $('[data-track]').removeClass('playing paused');
+          // $('[data-track="' + currentTrack + '"]').toggleClass('playing', playing).toggleClass('paused', paused);
         });
 
         Rhapsody.player.on('playtimer', function(e) {
           var id = currentTrack;
           var current = e.data.currentTime;
           var total = e.data.totalTime;
-          var width = $("[data-track='" + id + "'] .track-info").width();
-
-          $("[data-track='" + id + "']").addClass("playing");
-          $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
-          $("[data-track='" + id + "'] .current-time").html(Rhapsody.util.secondsToTime(total - current));
+          // var width = $("[data-track='" + id + "'] .track-info").width();
+          //
+          // $("[data-track='" + id + "']").addClass("playing");
+          // $("[data-track='" + id + "'] .progress-bar").width(parseInt((current / total) * width).toString() + "px");
+          // $("[data-track='" + id + "'] .current-time").html(Rhapsody.util.secondsToTime(total - current));
         });
 
         Rhapsody.player.on('error', console.log);
       });
     </script>
     <style type="text/css">
-      body {
+      /*body {
         font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
       }
 
@@ -231,7 +230,7 @@
       .playing .current-time,
       .paused .current-time {
         display: block;
-      }
+      }*/
     </style>
   </head>
   <body>
