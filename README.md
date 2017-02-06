@@ -1,3 +1,13 @@
+# Attention:
+
+This SDK has been deprecated in favor of the new and improved [napster.js](https://github.com/Napster/napster.js) SDK.
+
+Please update your projects.  
+
+We will keep this repository active until May, 2017 to help with your transition.
+
+----
+
 # Rhapsody.js
 
 ### Getting Started
